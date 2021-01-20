@@ -1,0 +1,86 @@
+#------------------------------
+install.packages('rvest')
+library(rvest)
+library(stringr)
+
+#------------------------------------------------------------------------------------
+# THIS WORKS! USE THIS!
+url = 'https://www.pro-football-reference.com/years/2000/games.htm'
+# https://www.sports-reference.com/cfb/years/2019-schedule.html
+read_xml(x, encoding = encoding, ..., as_html = TRUE, options = options)
+webpage = read_html(url)
+
+table_links = webpage %>% html_node("table") %>% html_nodes("a")
+boxscore_links = subset(table_links, table_links %>% html_text() %in% "boxscore")
+boxscore_links = as.list(boxscore_links)
+bscorelinks <- str_extract(boxscore_links, "(boxscores).*(htm)")
+#blinks <- bscorelinks[1:10]
+
+links <- NULL
+gamesscores <- data.frame(matrix(ncol = 10, nrow = 0))
+colnames(gamesscores) <- c("VQ1", "VQ2", "VQ3", "VQ4", "HQ1", "HQ2", "HQ3", "HQ4", "Vteam", "Hteam", "GameID")
+count = 0
+gamesscores[1, ] <- 99
+GamesScores <- data.frame("VQ1"=99, "VQ2"=99, "VQ3"=99, "VQ4"=99, "HQ1"=99, "HQ2"=99, "HQ3"=99, "HQ4"=99, "Vteam"="VTEAM", "Hteam"="HTEAM", "GameID" = "GAMEID", stringsAsFactors = FALSE)
+GamesScores
+for (link in bscorelinks) {
+  count = count + 1
+  scorelink <- paste(link)
+  scorelink
+  gid <- str_extract(scorelink,"[0-9]+[a-z]+")
+  scoresurl <- paste('https://www.pro-football-reference.com/boxscores/',gid,'.htm', sep="")
+  scorespg <- read_html(scoresurl)
+  head(scorespg)
+  qscores <- html_nodes(scorespg,'.center') %>%   html_text()
+  qscores
+  if('OT' %in% qscores == 'FALSE') {
+    vqscores <- qscores[2:5]
+    hqscores <- qscores[8:11]
+    } else {
+    vqscores <- qscores[2:5]
+    hqscores <- qscores[9:12]
+    }
+  vqscores <- as.numeric(vqscores)
+  hqscores <- as.numeric(hqscores)
+  vqscores 
+  hqscores
+
+  links <- html_nodes(scorespg, '.section_anchor')
+    visiting_link <- str_subset(links, "vis_starters_link")
+    splitvisiting_link <- strsplit(visiting_link,"\"")
+    unlistvisiting_link <- unlist(splitvisiting_link)
+    sixthvisiting_link <- unlistvisiting_link[6]
+    unlistsixthvisiting_link <- unlist(sixthvisiting_link)
+    splitsixthvisiting_link <- strsplit(unlistsixthvisiting_link, " ")
+    unlistsplitsixthvisiting_link <- unlist(splitsixthvisiting_link)
+    visitingteam <-unlistsplitsixthvisiting_link[1]
+    visitingteam
+    
+    home_link <- str_subset(links, "home_starters_link")
+    splithome_link <- strsplit(home_link,"\"")
+    unlisthome_link <- unlist(splithome_link)
+    sixthhome_link <- unlisthome_link[6]
+    unlistsixthhome_link <- unlist(sixthhome_link)
+    splitsixthhome_link <- strsplit(unlistsixthhome_link, " ")
+    unlistsplitsixthhome_link <- unlist(splitsixthhome_link)
+    hometeam <-unlistsplitsixthhome_link[1]
+    hometeam
+    
+      gsgsrow <- c(vqscores, hqscores, visitingteam, hometeam, gid)
+      if (count < 2){
+        GScores <- rbind(GamesScores, gsgsrow)
+      }
+      else {
+        GScores <- rbind(GScores, gsgsrow)
+      }
+      
+}   
+GScores <- GScores[-1,]
+write.csv(GScores,"NFL_games_2000.csv")    
+    #-----------------------------------
+#to combine all data into one file, move selected files into NFLQscores folder, then run
+myMergedData <- 
+  do.call(rbind,
+          lapply(list.files(path = 'C:/Users/cjmartin/Documents/NFLQscores'), read.csv))
+#then save MyMergedData into csv or xslx file of choice
+#--------------------------------------
