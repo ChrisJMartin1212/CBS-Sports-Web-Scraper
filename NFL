@@ -1,11 +1,16 @@
 install.packages('rvest')
 library(rvest)
 library(stringr)
-wk <- 15
 season <- 2020
+wk <- 18
+regular_or_playoffs <- 'regular'
+  if (wk > 17) {
+  regular_or_playoffs <- 'postseason'
+            }
 ##make sure wk, season, and url are correct before proceeding
-scoresurl <- 'https://www.cbssports.com/nfl/scoreboard/2020/regular/15/'
-scorespg <- read_html(scoresurl)
+#scoresurl <- 'https://www.cbssports.com/nfl/scoreboard/2020/regular/15/'
+surl <- paste0("https://www.cbssports.com/nfl/scoreboard/",season,"/",regular_or_playoffs,"/",wk)
+scorespg <- read_html(surl)
 head(scorespg)
 qscores <- html_nodes(scorespg,'.scores')
 qscores
