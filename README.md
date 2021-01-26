@@ -1,7 +1,7 @@
 
 # Intro
 
-CBS-Sports-Web-Scraper is an R program designed to pull ONLY the quarter scores from the final box score of an NFL game. The code only works on historical (non real-time) data on the pages it scrapes.
+CBS-Sports-Web-Scraper is an R program designed to pull ONLY the quarter scores from the final box score of an NFL game. The NFL code only works on historical (non real-time) data on the CBSSportsline.com NFL page.
 
 ## Packages/Libraries to install
 
