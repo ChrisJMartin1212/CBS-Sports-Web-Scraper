@@ -1,57 +1,54 @@
 install.packages('rvest')
 library(rvest)
 library(stringr)
+wk <- 15
 season <- 2020
-wk <- 18
 regular_or_playoffs <- 'regular'
-  if (wk > 17) {
+if (wk > 17) {
   regular_or_playoffs <- 'postseason'
-            }
+}
 ##make sure wk, season, and url are correct before proceeding
-#scoresurl <- 'https://www.cbssports.com/nfl/scoreboard/2020/regular/15/'
+scoresurl <- 'https://www.cbssports.com/nfl/scoreboard/2020/regular/15/'
 surl <- paste0("https://www.cbssports.com/nfl/scoreboard/",season,"/",regular_or_playoffs,"/",wk)
-scorespg <- read_html(surl)
-head(scorespg)
-qscores <- html_nodes(scorespg,'.scores')
-qscores
+scores_pg <- read_html(surl)
+head(scores_pg)
 
-nflteams <- html_nodes(scorespg,'.team')
-nflteams
-ssteamnfl <- html_text(nflteams,'')
-ssteamnfl
-# check to see if there are 32 teams playing this week
-teamsWk_14_20 <- ssteamnfl[-c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63)]
-teamsWk_14_20 # should look pretty
+qtr_scores <- html_nodes(scores_pg,'.scores')
+qtr_scores
 
-teams <- qscores#[-c(37,42)] #only if need to remove OT scores
+raw_teams <- html_nodes(scores_pg,'.team')
+raw_teams
+
+parsed_teams <- html_text(raw_teams,'')
+parsed_teams
+
+
+teams_playing <- parsed_teams[-c(1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,55,57,59,61,63)]
+teams_playing # creates a list of the teams that are playing that week
+
+
+teams <- qtr_scores [-c(125,130)] #only if need to remove OT scores
 teamsscores <- html_text(teams,"") %>%
   str_extract("[0-9]{1,}") %>%
   as.numeric()
 teamsscores
 
-max <- 4
-x_14 <- seq_along(teamsscores)
-d_14 <- split(teamsscores, ceiling(x_14/max))
-w_14_2020 <- t(data.frame(d_14))
-w_14_2020
+max_length <- 4 # of row
+sequence_teamsscores <- seq_along(teamsscores)
+split_teamsscores <- split(teamsscores, ceiling(sequence_teamsscores/max_length))
+transposed_teamsscores <- t(data.frame(split_teamsscores))
+transposed_teamsscores 
 
-wk_14_20teams <- data.frame(matrix(teamsWk_14_20, nrow = 32, ncol = 1))# check to see if there are 32 teams playing this week
-wk_14_20teams
+week_teams <- data.frame(matrix(teams_playing, nrow = 32, ncol = 1))
+week_teams # column of teams that are playing
 
-Weekno_14_2020 <- cbind(wk_14_20teams, w_14_2020)
-colnames(Weekno_14_2020) <- c("Team", "Q1", "Q2", "Q3", "Q4")
-Weekno_14_2020
+scorelines <- cbind(week_teams, transposed_teamsscores)
+colnames(scorelines) <- c("Team", "Q1", "Q2", "Q3", "Q4")
+scorelines 
 
-df_14 <- data.frame("Week" = wk, "Season" = season)
-dff_14 <-df_14[rep(seq_len(nrow(df_14)), 32), ]# check to see if there are 32 teams playing this week
-week_14_2020 <- cbind (Weekno_14_2020,dff_14)
-week_14_2020
+week_season<- data.frame("Week" = wk, "Season" = season)
+week_season_rows <-week_season[rep(seq_len(nrow(week_season)), 32), ]# check to see if there are 32 teams playing this week
+WEEKLY_SCORES <- cbind (scorelines,week_season_rows )
+WEEKLY_SCORES 
 
-write.csv(week_14_2020,"week_14_2020.csv")
----------------
-  #combine all data into one file
-  myMergedData <- 
-  do.call(rbind,
-          lapply(list.files(path = 'C:/Users/cjmartin/Documents/NFLQscores'), read.csv))
-
-#-------------------
+write.csv(WEEKLY_SCORES,"week_[week number or date]_[season].csv")
